@@ -159,6 +159,7 @@ using namespace std;
  *   server_software                                                 string             -          default("Phusion_Passenger/5.3.6")
  *   show_version_in_header                                          boolean            -          default(true)
  *   single_app_mode_app_root                                        string             -          default,read_only
+ *   single_app_mode_app_start_command                               string             -          read_only
  *   single_app_mode_app_type                                        string             -          read_only
  *   single_app_mode_startup_file                                    string             -          read_only
  *   standalone_engine                                               string             -          default
@@ -252,6 +253,10 @@ private:
 			errors.push_back(Error("If '{{multi_app_mode}}' is set,"
 				" then '{{single_app_mode_startup_file}}' may not be set"));
 		}
+		if (!config["single_app_mode_app_start_command"].isNull()) {
+			errors.push_back(Error("If '{{multi_app_mode}}' is set,"
+				" then '{{single_app_mode_app_start_command}}' may not be set"));
+		}
 	}
 
 	static void validateSingleAppMode(const ConfigKit::Store &config,
@@ -263,8 +268,9 @@ private:
 			return;
 		}
 
-		// single_app_mode_app_type and single_app_mode_startup_file are
-		// autodetected in initializeSingleAppMode()
+		// single_app_mode_app_type, single_app_mode_startup_file and
+		// single_app_mode_app_start_command are autodetected in
+		// initializeSingleAppMode() so no need to validate them.
 
 		ControllerSingleAppModeSchema::validateAppType("single_app_mode_app_type",
 			wrapperRegistry, config, errors);
@@ -424,6 +430,7 @@ public:
 			ControllerSingleAppModeSchema::getDefaultAppRoot);
 		add("single_app_mode_app_type", STRING_TYPE, OPTIONAL | READ_ONLY);
 		add("single_app_mode_startup_file", STRING_TYPE, OPTIONAL | READ_ONLY);
+		add("single_app_mode_app_start_command", STRING_TYPE, OPTIONAL | READ_ONLY);
 
 		// Add subschema: controllerServerKit
 		controllerServerKit.translator.setPrefixAndFinalize("controller_");
