@@ -96,7 +96,7 @@ private:
 			cstat, cstatMutex, throttleRate) != FT_NONEXISTANT;
 	}
 
-	AppLocalConfigPtr getAppLocalConfigFromCache(const StaticString &appRoot) {
+	bool getAppLocalConfigFromCache(const StaticString &appRoot, Result &result) {
 		boost::unique_lock<boost::mutex> l;
 		time_t currentTime = SystemTime::get();
 		if (configMutex != NULL) {
@@ -110,7 +110,12 @@ private:
 		}
 		AppLocalConfigPtr appLocalConfig;
 		appLocalConfigCache.lookup(appRoot, &appLocalConfig);
-		return appLocalConfig;
+		if (appLocalConfig->appStartCommand.empty()) {
+			return false;
+		} else {
+			result.appStartCommand = appLocalConfig->appStartCommand;
+			return true;
+		}
 	}
 
 public:
@@ -202,11 +207,8 @@ public:
 		char buf[PATH_MAX + 32];
 		const char *end = buf + sizeof(buf) - 1;
 
-		AppLocalConfigPtr appLocalConfig = getAppLocalConfigFromCache(appRoot);
-
-		if (!appLocalConfig->appStartCommand.empty()) {
-			Result result;
-			result.appStartCommand = appLocalConfig->appStartCommand;
+		Result result;
+		if(getAppLocalConfigFromCache(appRoot, result)) {
 			return result;
 		}
 
